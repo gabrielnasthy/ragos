@@ -1,0 +1,30 @@
+[sssd]
+services = nss, pam
+config_file_version = 2
+domains = ragos.intra
+
+[nss]
+filter_users = root
+filter_groups = root
+
+[pam]
+
+[domain/ragos.intra]
+id_provider = ad
+auth_provider = ad
+access_provider = ad
+chpass_provider = ad
+
+ad_domain = ragos.intra
+ad_server = ragos-server.ragos.intra
+
+ldap_id_mapping = True
+ldap_schema = ad
+
+cache_credentials = True
+krb5_store_password_if_offline = True
+
+fallback_homedir = /home/%u@%d
+default_shell = /bin/bash
+
+use_fully_qualified_names = True
