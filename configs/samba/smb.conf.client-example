@@ -1,0 +1,34 @@
+[global]
+    # Identificação do Domínio
+    workgroup = RAGOS
+    realm = RAGOS.INTRA
+    security = ADS
+
+    # Servidor de Autenticação
+    password server = ragos-server.ragos.intra
+
+    # Kerberos
+    kerberos method = secrets and keytab
+    dedicated keytab file = /etc/krb5.keytab
+
+    # DNS e Resolução de Nomes
+    name resolve order = host wins bcast
+
+    # ID Mapping (configuração básica)
+    idmap config * : backend = tdb
+    idmap config * : range = 3000000-3999999
+    
+    idmap config RAGOS : backend = rid
+    idmap config RAGOS : range = 10000-999999
+
+    # Mapeamento de Utilizadores
+    template shell = /bin/bash
+    template homedir = /home/%U
+
+    # Logs
+    log level = 1
+    log file = /var/log/samba/log.%m
+    max log size = 50
+
+    # Modo Cliente (não é servidor de ficheiros)
+    server role = member server

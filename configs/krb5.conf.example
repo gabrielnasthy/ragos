@@ -1,0 +1,25 @@
+[libdefaults]
+    default_realm = RAGOS.INTRA
+    dns_lookup_realm = true
+    dns_lookup_kdc = true
+    ticket_lifetime = 24h
+    renew_lifetime = 7d
+    forwardable = true
+    rdns = false
+    default_ccache_name = KEYRING:persistent:%{uid}
+
+[realms]
+    RAGOS.INTRA = {
+        kdc = ragos-server.ragos.intra
+        admin_server = ragos-server.ragos.intra
+        default_domain = ragos.intra
+    }
+
+[domain_realm]
+    .ragos.intra = RAGOS.INTRA
+    ragos.intra = RAGOS.INTRA
+
+[logging]
+    default = FILE:/var/log/krb5libs.log
+    kdc = FILE:/var/log/krb5kdc.log
+    admin_server = FILE:/var/log/kadmind.log
