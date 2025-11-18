@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Groups - RAGOS Web Admin{% endblock %}
+{% block page_title %}Group Management{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h3><i class="bi bi-collection"></i> Groups</h3>
+        <p class="text-muted">Manage Active Directory groups</p>
+    </div>
+    <div class="col-md-6 text-end">
+        {% if is_admin %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+            <i class="bi bi-plus-circle"></i> Create Group
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="groupsTable">
+                <thead>
+                    <tr>
+                        <th>Group Name</th>
+                        <th>Members</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create New Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createGroupForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Group Name *</label>
+                        <input type="text" class="form-control" name="groupname" required>
+                        <small class="form-text text-muted">Alphanumeric and spaces allowed</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Create Group
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Members Modal -->
+<div class="modal fade" id="manageMembersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-people"></i> Manage Members: <span id="manageGroupName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="currentGroupName">
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Current Members</h6>
+                        <div class="list-group" id="currentMembers" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center p-3">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Add Members</h6>
+                        <div class="mb-2">
+                            <input type="text" class="form-control" id="memberSearch" placeholder="Search users...">
+                        </div>
+                        <div class="list-group" id="availableMembers" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center p-3">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let groupsTable;
+    const isAdmin = {{ 'true' if is_admin else 'false' }};
+    
+    // Load groups
+    function loadGroups() {
+        $.ajax({
+            url: '/api/groups',
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const tbody = $('#groupsTable tbody');
+                    tbody.empty();
+                    
+                    if (response.groups.length === 0) {
+                        tbody.append('<tr><td colspan="3" class="text-center">No groups found</td></tr>');
+                        return;
+                    }
+                    
+                    response.groups.forEach(function(group) {
+                        const row = `
+                            <tr>
+                                <td><strong>${group.groupname}</strong></td>
+                                <td><span class="badge bg-info">${group.member_count || 0} members</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewMembers('${group.groupname}')">
+                                        <i class="bi bi-people"></i> Members
+                                    </button>
+                                    ${isAdmin ? `
+                                    <button class="btn btn-sm btn-danger" onclick="deleteGroup('${group.groupname}')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                    
+                    // Initialize DataTable
+                    if (groupsTable) {
+                        groupsTable.destroy();
+                    }
+                    groupsTable = $('#groupsTable').DataTable({
+                        pageLength: 25,
+                        order: [[0, 'asc']]
+                    });
+                }
+            },
+            error: function(xhr) {
+                showToast('Failed to load groups', 'danger');
+            }
+        });
+    }
+    
+    // Create group
+    $('#createGroupForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            groupname: $('input[name="groupname"]').val(),
+            description: $('textarea[name="description"]').val()
+        };
+        
+        $.ajax({
+            url: '/api/groups',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    $('#createGroupModal').modal('hide');
+                    $('#createGroupForm')[0].reset();
+                    loadGroups();
+                }
+            },
+            error: function(xhr) {
+                showToast(xhr.responseJSON?.message || 'Failed to create group', 'danger');
+            }
+        });
+    });
+    
+    // View members
+    window.viewMembers = function(groupname) {
+        $('#manageGroupName').text(groupname);
+        $('#currentGroupName').val(groupname);
+        $('#manageMembersModal').modal('show');
+        
+        // Load current members
+        $.ajax({
+            url: `/api/groups/${groupname}`,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const container = $('#currentMembers');
+                    container.empty();
+                    
+                    if (response.members.length === 0) {
+                        container.append('<div class="list-group-item">No members</div>');
+                    } else {
+                        response.members.forEach(function(member) {
+                            const item = `
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-person"></i> ${member}</span>
+                                    ${isAdmin ? `
+                                    <button class="btn btn-sm btn-danger" onclick="removeMember('${groupname}', '${member}')">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            `;
+                            container.append(item);
+                        });
+                    }
+                }
+            }
+        });
+        
+        // Load available members
+        if (isAdmin) {
+            $.ajax({
+                url: '/api/users',
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const container = $('#availableMembers');
+                        container.empty();
+                        
+                        response.users.forEach(function(user) {
+                            const item = `
+                                <div class="list-group-item d-flex justify-content-between align-items-center available-member">
+                                    <span><i class="bi bi-person"></i> ${user.username}</span>
+                                    <button class="btn btn-sm btn-success" onclick="addMember('${groupname}', '${user.username}')">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            `;
+                            container.append(item);
+                        });
+                    }
+                }
+            });
+        }
+    };
+    
+    // Add member
+    window.addMember = function(groupname, username) {
+        $.ajax({
+            url: `/api/groups/${groupname}/members`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ usernames: [username] }),
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    viewMembers(groupname);
+                    loadGroups();
+                }
+            },
+            error: function(xhr) {
+                showToast(xhr.responseJSON?.message || 'Failed to add member', 'danger');
+            }
+        });
+    };
+    
+    // Remove member
+    window.removeMember = function(groupname, username) {
+        if (!confirm(`Remove ${username} from ${groupname}?`)) return;
+        
+        $.ajax({
+            url: `/api/groups/${groupname}/members/${username}`,
+            method: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    viewMembers(groupname);
+                    loadGroups();
+                }
+            },
+            error: function(xhr) {
+                showToast(xhr.responseJSON?.message || 'Failed to remove member', 'danger');
+            }
+        });
+    };
+    
+    // Delete group
+    window.deleteGroup = function(groupname) {
+        if (!confirm(`Delete group "${groupname}"? This action cannot be undone.`)) return;
+        
+        $.ajax({
+            url: `/api/groups/${groupname}`,
+            method: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    loadGroups();
+                }
+            },
+            error: function(xhr) {
+                showToast(xhr.responseJSON?.message || 'Failed to delete group', 'danger');
+            }
+        });
+    };
+    
+    // Search members
+    $('#memberSearch').on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('#availableMembers .list-group-item').each(function() {
+            const text = $(this).text().toLowerCase();
+            $(this).toggle(text.includes(searchTerm));
+        });
+    });
+    
+    // Initial load
+    loadGroups();
+});
+</script>
+{% endblock %}

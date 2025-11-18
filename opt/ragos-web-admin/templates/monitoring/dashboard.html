@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring - RAGOS Web Admin{% endblock %}
+{% block page_title %}System Monitoring{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h3><i class="bi bi-activity"></i> System Monitoring</h3>
+        <p class="text-muted">Real-time system metrics and service status</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <span class="badge bg-success">
+            <i class="bi bi-circle-fill"></i> Auto-refresh: <span id="refreshCounter">5</span>s
+        </span>
+    </div>
+</div>
+
+<!-- System Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">CPU Usage</h6>
+                <h3 id="cpuUsage"><span class="spinner-border spinner-border-sm"></span></h3>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-info" id="cpuProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Memory Usage</h6>
+                <h3 id="memoryUsage"><span class="spinner-border spinner-border-sm"></span></h3>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-warning" id="memoryProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Disk Usage</h6>
+                <h3 id="diskUsage"><span class="spinner-border spinner-border-sm"></span></h3>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-danger" id="diskProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Load Average</h6>
+                <h3 id="loadAverage"><span class="spinner-border spinner-border-sm"></span></h3>
+                <small class="text-muted">1 min / 5 min / 15 min</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Status -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Service Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="servicesStatus">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-hdd"></i> Storage Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="storageStatus">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Users by Disk Usage -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Top 10 Users by Disk Usage</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topUsersChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
+{% endblock %}
