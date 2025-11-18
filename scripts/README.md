@@ -17,7 +17,6 @@ scripts/
 │   └── chroot-config.sh        # Configuração dentro do chroot
 ├── phase3/              # Configuração dos Serviços
 │   ├── setup-ad.sh             # Configuração do Active Directory
-│   ├── setup-network-server.sh # Rede e firewall do servidor
 │   ├── setup-nfs.sh            # Servidor NFS otimizado
 │   └── setup-pxe.sh            # Configuração DHCP/PXE
 ├── phase4/              # Golden Image (futuro)
@@ -78,14 +77,14 @@ ssh rocha@<IP-DO-SERVIDOR>
 # 7. Configurar Active Directory
 sudo scripts/phase3/setup-ad.sh
 
-# 8. Configurar rede e firewall (futuro)
-# sudo scripts/phase3/setup-network-server.sh
+# 8. Configurar NFS
+sudo scripts/phase3/setup-nfs.sh
 
-# 9. Configurar NFS (futuro)
-# sudo scripts/phase3/setup-nfs.sh
+# 9. Configurar DHCP/PXE
+sudo scripts/phase3/setup-pxe.sh
 
-# 10. Configurar DHCP/PXE (futuro)
-# sudo scripts/phase3/setup-pxe.sh
+# 10. Configurar firewall (manual - veja guia de instalação)
+# scripts disponíveis documentam o processo
 ```
 
 ### FASE 4-5: Golden Image e PXE Boot
@@ -165,6 +164,32 @@ Configura o Active Directory Samba completo:
 - Workgroup: RAGOS
 - Função: Domain Controller
 - Password: RAG200519@.rocha
+
+#### setup-nfs.sh
+Configura o servidor NFS otimizado:
+- Cria `/etc/exports` com configurações otimizadas
+- Configura `/etc/nfs.conf` para performance
+- Habilita e inicia serviços NFS
+- Testa montagem local
+- Prepara exports para nfs_root e nfs_home
+
+**Exports:**
+- `/mnt/ragostorage/nfs_root` - Golden Image (fsid=0)
+- `/mnt/ragostorage/nfs_home` - Diretórios home (fsid=1)
+
+#### setup-pxe.sh
+Configura DHCP/TFTP/PXE completo:
+- Configura dnsmasq para DHCP e TFTP
+- Define range de IPs (10.0.3.100-200)
+- Configura boot PXE/UEFI
+- Habilita logging detalhado
+- Prepara diretório TFTP
+
+**Configurações:**
+- Interface: enp2s0
+- IP: 10.0.3.1
+- DHCP Range: 10.0.3.100-200
+- TFTP Root: /mnt/ragostorage/tftp_root
 
 ### Monitoramento
 
@@ -257,13 +282,13 @@ Se algo falhar:
 ### ✅ Implementado
 - [x] Phase 0: Scripts de limpeza e storage
 - [x] Phase 1: Scripts de criação de rede e VMs
-- [x] Phase 3: Script de configuração do AD
+- [x] Phase 3: Scripts completos (AD, NFS, PXE)
 - [x] Ferramentas de monitoramento
 - [x] Scripts de adesão ao domínio
+- [x] Guia de instalação completa
 
 ### 🚧 Em Desenvolvimento
 - [ ] Phase 2: Scripts de instalação automatizada do Arch
-- [ ] Phase 3: Scripts de NFS, rede e PXE
 - [ ] Phase 4: Scripts de criação da Golden Image
 - [ ] Phase 5: Scripts de configuração do boot PXE
 - [ ] Script mestre de instalação completa

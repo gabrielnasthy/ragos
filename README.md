@@ -41,6 +41,7 @@ Este repositório documenta a implementação completa da infraestrutura RAGOSth
 
 ### Guias Principais
 
+- **[Guia de Instalação Completa](docs/installation-guide.md)** - Implementação completa da infraestrutura do zero usando scripts de automação
 - **[Adesão ao Domínio (Completo)](docs/domain-join-golden-image.md)** - Guia detalhado passo a passo para aderir a Golden Image ao domínio Samba AD
 - **[Guia Rápido](docs/quick-reference.md)** - Referência rápida de comandos e troubleshooting
 
