@@ -44,10 +44,23 @@ Este repositório documenta a implementação completa da infraestrutura RAGOSth
 - **[Adesão ao Domínio (Completo)](docs/domain-join-golden-image.md)** - Guia detalhado passo a passo para aderir a Golden Image ao domínio Samba AD
 - **[Guia Rápido](docs/quick-reference.md)** - Referência rápida de comandos e troubleshooting
 
-### Scripts Auxiliares
+### 🤖 Scripts de Automação
 
-- **[prepare-golden-image-for-domain.sh](scripts/prepare-golden-image-for-domain.sh)** - Script automatizado para preparar a Golden Image
-- **[verify-domain-join.sh](scripts/verify-domain-join.sh)** - Script de verificação da adesão ao domínio
+- **[Scripts README](scripts/README.md)** - Documentação completa dos scripts de automação
+- **Phase 0 (Preparação):**
+  - [cleanup-ragos.sh](scripts/phase0/cleanup-ragos.sh) - Limpeza completa do ambiente
+  - [setup-storage.sh](scripts/phase0/setup-storage.sh) - Configuração da estrutura de storage
+- **Phase 1 (Infraestrutura):**
+  - [setup-network.sh](scripts/phase1/setup-network.sh) - Criação da rede libvirt
+  - [create-vms.sh](scripts/phase1/create-vms.sh) - Criação automatizada das VMs
+- **Phase 3 (Serviços):**
+  - [setup-ad.sh](scripts/phase3/setup-ad.sh) - Configuração do Active Directory
+- **Monitoramento:**
+  - [ragos-monitor.sh](scripts/monitoring/ragos-monitor.sh) - Monitor em tempo real
+  - [ragos-diagnostic.sh](scripts/monitoring/ragos-diagnostic.sh) - Diagnóstico completo
+- **Adesão ao Domínio:**
+  - [prepare-golden-image-for-domain.sh](scripts/prepare-golden-image-for-domain.sh) - Preparação da Golden Image
+  - [verify-domain-join.sh](scripts/verify-domain-join.sh) - Verificação da adesão
 
 ### Exemplos de Configuração
 
@@ -57,6 +70,38 @@ Este repositório documenta a implementação completa da infraestrutura RAGOSth
 - **[resolv.conf](configs/resolv.conf.example)** - Configuração do DNS
 
 ## 🚀 Quick Start
+
+### Opção 1: Automação Completa (Recomendado)
+
+Para implementar o ambiente completo usando os scripts de automação:
+
+```bash
+# 1. Limpar ambiente anterior (se existir)
+sudo scripts/phase0/cleanup-ragos.sh
+
+# 2. Criar estrutura de storage
+sudo scripts/phase0/setup-storage.sh
+
+# 3. Criar rede libvirt
+sudo scripts/phase1/setup-network.sh
+
+# 4. Criar VMs
+sudo scripts/phase1/create-vms.sh
+
+# 5. Instalar Arch Linux no RAGOS-SERVER (manual via console)
+sudo virt-manager  # Ou: sudo virsh console RAGOS-SERVER
+
+# 6. Configurar Active Directory (via SSH no servidor)
+ssh rocha@<IP-DO-SERVIDOR>
+sudo scripts/phase3/setup-ad.sh
+
+# 7. Monitorar o ambiente
+sudo scripts/monitoring/ragos-monitor.sh
+```
+
+Para documentação completa dos scripts, veja: [scripts/README.md](scripts/README.md)
+
+### Opção 2: Adesão ao Domínio (Golden Image Existente)
 
 ### Problema: `net ads join` falha com "Preauthentication failed"
 
