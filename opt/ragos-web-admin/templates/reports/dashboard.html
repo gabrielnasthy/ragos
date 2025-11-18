@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - RAGOS Web Admin{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <h3><i class="bi bi-file-earmark-bar-graph"></i> Reports & Analytics</h3>
+        <p class="text-muted">System reports and audit logs</p>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Total Storage Allocated</h6>
+                <h3 id="totalAllocated">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Total Storage Used</h6>
+                <h3 id="totalUsed">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Average Usage %</h6>
+                <h3 id="avgUsage">-</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Log -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Audit Log</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="auditLogTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Target</th>
+                        <th>IP Address</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load audit log
+    function loadAuditLog() {
+        $.ajax({
+            url: '/api/monitoring/audit-log?limit=100',
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const tbody = $('#auditLogTable tbody');
+                    tbody.empty();
+                    
+                    if (response.logs.length === 0) {
+                        tbody.append('<tr><td colspan="6" class="text-center">No audit logs</td></tr>');
+                        return;
+                    }
+                    
+                    response.logs.forEach(function(log) {
+                        const statusBadge = log.status === 'success' ? 
+                            '<span class="badge bg-success">Success</span>' :
+                            '<span class="badge bg-danger">Failed</span>';
+                        
+                        const row = `
+                            <tr>
+                                <td>${new Date(log.timestamp).toLocaleString()}</td>
+                                <td>${log.username}</td>
+                                <td><code>${log.action}</code></td>
+                                <td>${log.target || '-'}</td>
+                                <td>${log.ip_address || '-'}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                    
+                    // Initialize DataTable
+                    $('#auditLogTable').DataTable({
+                        pageLength: 25,
+                        order: [[0, 'desc']]
+                    });
+                }
+            },
+            error: function(xhr) {
+                showToast('Failed to load audit log', 'danger');
+            }
+        });
+    }
+    
+    // Load storage stats
+    function loadStorageStats() {
+        $.ajax({
+            url: '/api/quotas',
+            method: 'GET',
+            success: function(response) {
+                if (response.success && response.quotas) {
+                    let totalAllocated = 0;
+                    let totalUsed = 0;
+                    let count = 0;
+                    
+                    response.quotas.forEach(function(quota) {
+                        totalAllocated += quota.hard_limit_mb || 0;
+                        totalUsed += quota.used_mb || 0;
+                        count++;
+                    });
+                    
+                    const avgUsage = count > 0 ? ((totalUsed / totalAllocated) * 100).toFixed(2) : 0;
+                    
+                    $('#totalAllocated').text(formatBytes(totalAllocated * 1024 * 1024));
+                    $('#totalUsed').text(formatBytes(totalUsed * 1024 * 1024));
+                    $('#avgUsage').text(avgUsage + '%');
+                }
+            }
+        });
+    }
+    
+    // Initial load
+    loadAuditLog();
+    loadStorageStats();
+});
+</script>
+{% endblock %}

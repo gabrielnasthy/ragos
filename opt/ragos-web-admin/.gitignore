@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+flask_session/
+.webassets-cache
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application specific
+/opt/ragos-web-admin/database/*.db
+/opt/ragos-web-admin/flask_session/*
+!/opt/ragos-web-admin/flask_session/.gitkeep
+/opt/ragos-web-admin/logs/*
+!/opt/ragos-web-admin/logs/.gitkeep
+
+# Backup files
+*.backup
+*.bak

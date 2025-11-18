@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Quotas - RAGOS Web Admin{% endblock %}
+{% block page_title %}Quota Management{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h3><i class="bi bi-hdd"></i> Quotas</h3>
+        <p class="text-muted">Manage user disk quotas</p>
+    </div>
+    <div class="col-md-6 text-end">
+        {% if is_admin %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#setQuotaModal">
+            <i class="bi bi-plus-circle"></i> Set Quota
+        </button>
+        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#quotaPoliciesModal">
+            <i class="bi bi-file-earmark-text"></i> Policies
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="quotasTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Used</th>
+                        <th>Soft Limit</th>
+                        <th>Hard Limit</th>
+                        <th>Usage %</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Set Quota Modal -->
+<div class="modal fade" id="setQuotaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-hdd"></i> Set User Quota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="setQuotaForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Username *</label>
+                        <select class="form-select" name="username" id="quotaUsername" required>
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Soft Limit (MB) *</label>
+                        <input type="number" class="form-control" name="soft_limit" min="1" required>
+                        <small class="form-text text-muted">Warning threshold</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hard Limit (MB) *</label>
+                        <input type="number" class="form-control" name="hard_limit" min="1" required>
+                        <small class="form-text text-muted">Maximum allowed</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Or use policy:</label>
+                        <select class="form-select" id="policySelect">
+                            <option value="">Select a policy...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Set Quota
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quota Policies Modal -->
+<div class="modal fade" id="quotaPoliciesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-text"></i> Quota Policies</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Policy Name</th>
+                            <th>Soft Limit</th>
+                            <th>Hard Limit</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policiesTableBody">
+                        <tr>
+                            <td colspan="4" class="text-center">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/quotas.js') }}"></script>
+{% endblock %}
